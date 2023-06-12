@@ -1,14 +1,31 @@
 package mr
 
-import "log"
-import "net"
-import "os"
-import "net/rpc"
-import "net/http"
+import (
+	"log"
+	"net"
+	"net/http"
+	"net/rpc"
+	"os"
+	"sync"
+	"time"
+)
 
 type Coordinator struct {
-	// Your definitions here.
+	nReduce  int           // number of reduce tasks
+	inputNum int           // number of input files
+	timeout  time.Duration // timeout for a worker
 
+	nextWorkerId      int        // next worker id
+	nextWorkerIdMutex sync.Mutex // mutex for next worker id
+
+	nextTaskId      int        // next task id
+	nextTaskIdMutex sync.Mutex // mutex for next task id
+
+	taskChan    chan Task    // task channel
+	taskMsgChan chan TaskMsg // task message channel
+
+	MapResult      []string // map result file names
+	MapResultMutex sync.Mutex
 }
 
 // Your code here -- RPC handlers for the worker to call.

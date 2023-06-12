@@ -1,9 +1,11 @@
 package mr
 
-import "fmt"
-import "log"
-import "net/rpc"
-import "hash/fnv"
+import (
+	"fmt"
+	"hash/fnv"
+	"log"
+	"net/rpc"
+)
 
 // WorkerArgs is the argument of the RPC call
 type WorkerArgs struct {
@@ -16,27 +18,27 @@ type WorkerArgs struct {
 	taskType TaskType // map or reduce task type
 }
 
-func (args *WorkerArgs) WorkerId() int {
+func (args *WorkerArgs) GetWorkerId() int {
 	return args.workerId
 }
 
-func (args *WorkerArgs) RequestType() RequestType {
+func (args *WorkerArgs) GetRequestType() RequestType {
 	return args.requestType
 }
 
-func (args *WorkerArgs) Output() []string {
+func (args *WorkerArgs) GetOutput() []string {
 	return args.output
 }
 
-func (args *WorkerArgs) Input() []string {
+func (args *WorkerArgs) GetInput() []string {
 	return args.input
 }
 
-func (args *WorkerArgs) TaskId() int {
+func (args *WorkerArgs) GetTaskId() int {
 	return args.taskId
 }
 
-func (args *WorkerArgs) TaskType() TaskType {
+func (args *WorkerArgs) GetTaskType() TaskType {
 	return args.taskType
 }
 
@@ -51,31 +53,31 @@ type WorkerReply struct {
 	exitMsg   bool
 }
 
-func (reply *WorkerReply) WorkerId() int {
+func (reply *WorkerReply) GetWorkerId() int {
 	return reply.workerId
 }
 
-func (reply *WorkerReply) TaskType() TaskType {
+func (reply *WorkerReply) GetTaskType() TaskType {
 	return reply.taskType
 }
 
-func (reply *WorkerReply) NReduce() int {
+func (reply *WorkerReply) GetNReduce() int {
 	return reply.nReduce
 }
 
-func (reply *WorkerReply) TaskId() int {
+func (reply *WorkerReply) GetTaskId() int {
 	return reply.taskId
 }
 
-func (reply *WorkerReply) Input() []string {
+func (reply *WorkerReply) GetInput() []string {
 	return reply.input
 }
 
-func (reply *WorkerReply) ReduceNum() int {
+func (reply *WorkerReply) GetReduceNum() int {
 	return reply.reduceNum
 }
 
-func (reply *WorkerReply) ExitMsg() bool {
+func (reply *WorkerReply) GetExitMsg() bool {
 	return reply.exitMsg
 }
 
