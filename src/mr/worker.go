@@ -44,16 +44,16 @@ func (args *WorkerArgs) GetTaskType() TaskType {
 
 // WorkerReply is the reply of the RPC call
 type WorkerReply struct {
-	workerId  int
+	workerId  int32
 	taskType  TaskType
 	nReduce   int // number of reduce tasks
-	taskId    int
+	taskId    int32
 	input     []string
 	reduceNum int
 	exitMsg   bool
 }
 
-func (reply *WorkerReply) GetWorkerId() int {
+func (reply *WorkerReply) GetWorkerId() int32 {
 	return reply.workerId
 }
 
@@ -65,7 +65,7 @@ func (reply *WorkerReply) GetNReduce() int {
 	return reply.nReduce
 }
 
-func (reply *WorkerReply) GetTaskId() int {
+func (reply *WorkerReply) GetTaskId() int32 {
 	return reply.taskId
 }
 
@@ -149,7 +149,6 @@ func call(rpcname string, args interface{}, reply interface{}) bool {
 	if err == nil {
 		return true
 	}
-
 	fmt.Println(err)
 	return false
 }
