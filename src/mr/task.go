@@ -24,13 +24,21 @@ func (t TaskType) String() string {
 
 // Task is the task to be executed
 type Task struct {
-	input           []string
-	isCreate        bool
-	taskType        TaskType
-	id              int64
-	excludeWorkerId int64
-	reduceNum       int
-	isExit          bool
+	Input           []string
+	IsCreate        bool
+	TaskType        TaskType
+	Id              int64
+	ExcludeWorkerId int64
+	ReduceNum       int
+	IsExit          bool
+}
+
+func (t *Task) TaskId(id int64) {
+	t.Id = id
+}
+
+func (t *Task) WorkerId(id int64) {
+	t.ExcludeWorkerId = id
 }
 
 type TaskRequest struct {

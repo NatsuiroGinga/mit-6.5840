@@ -39,7 +39,11 @@ func coordinatorSock() string {
 // RPCHandler is the interface for RPC handlers
 type RPCHandler interface {
 	// Handle handles the task
-	Handle(msg *TaskMsg, reply *WorkerReply) error
+	HandleTask(request *TaskRequest, reply *WorkerReply) error
+	// HandleWorker handles the worker
+	HandleWorker(request *WorkerRequest, reply *WorkerReply) error
+	// CheckTimeout checks the timeout
+	CheckTimeout()
 	// Done returns whether the job is done
 	Done() bool
 }

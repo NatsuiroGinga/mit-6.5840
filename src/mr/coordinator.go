@@ -24,7 +24,7 @@ type Coordinator struct {
 	nextTaskId    atomic.Int64
 	reduceTaskNum atomic.Int64
 	workerNum     atomic.Int64
-	waitingNum    atomic.Int64 // pending tasks number
+	waitingNum    atomic.Int64 // pending worker number
 
 	taskChan        chan *Task        // task channel
 	TaskRequestChan chan *TaskRequest // task message channel
@@ -38,7 +38,7 @@ type Coordinator struct {
 // an example RPC handler.
 //
 // the RPC argument and reply types are defined in rpc.go.
-func (c *Coordinator) Handle(request *TaskRequest, reply *WorkerReply) (err error) {
+func (c *Coordinator) HandleTask(request *TaskRequest, reply *WorkerReply) (err error) {
 	switch request.MsgType {
 	case Create: // create task
 		log.Println("create task")
@@ -88,11 +88,11 @@ func (c *Coordinator) finishTask(request *TaskRequest) (err error) {
 
 				for i := 0; i < c.nReduce; i++ {
 					task := &Task{
-						input:     reduceTasks[i],
-						isCreate:  true,
-						taskType:  Reduce,
-						id:        c.nextTaskId.Load(),
-						reduceNum: i,
+						Input:     reduceTasks[i],
+						IsCreate:  true,
+						TaskType:  Reduce,
+						Id:        c.nextTaskId.Load(),
+						ReduceNum: i,
 					}
 					c.taskChan <- task
 				}
@@ -103,7 +103,7 @@ func (c *Coordinator) finishTask(request *TaskRequest) (err error) {
 		}
 	}
 	if c.reduceTaskNum.Load() == 0 { // all reduce tasks are finished
-		task := &Task{isExit: true}
+		task := &Task{IsExit: true}
 		for {
 			c.taskChan <- task
 		}
@@ -127,9 +127,79 @@ func (c *Coordinator) updateTask(request *TaskRequest) (err error) {
 // fail a task
 func (c *Coordinator) failTask(request *TaskRequest) (err error) {
 	if _, ok := c.workingTasks.Load(request.TaskId); ok { // task exists
-		// taskStatus := new(TaskStatus)
+		task := new(Task)
+		copier.Copy(task, request)
+		v, _ := c.workingTasks.Load(request.TaskId)
+		taskStatus := v.(*TaskStatus)
+		task.ReduceNum = taskStatus.ReduceNum
+		c.taskChan <- task
 	}
 	return
+}
+
+func (c *Coordinator) HandleWorker(request *WorkerRequest, reply *WorkerReply) (err error) {
+	// pending worker num + 1
+	c.waitingNum.Add(1)
+	defer c.waitingNum.Add(-1)
+	switch request.RequestType {
+	case Initial: // initial worker
+		log.Println("initial worker")
+		reply.WorkerId = c.nextWorkerId.Load()
+		request.WorkerId = reply.WorkerId
+		c.workerNum.Add(1)
+	case Finished: // worker finished
+		log.Println("worker finished")
+		taskRequest := new(TaskRequest)
+		copier.Copy(taskRequest, request)
+		taskRequest.MsgType = Finish
+		taskRequest.TimeStamp = time.Now()
+		c.TaskRequestChan <- taskRequest
+	case Failed: // worker failed
+		log.Println("worker failed")
+		taskRequest := new(TaskRequest)
+		copier.Copy(taskRequest, request)
+		taskRequest.MsgType = Fail
+		taskRequest.TimeStamp = time.Now()
+	}
+	task := <-c.taskChan // get a task
+	if task.IsExit {
+		reply.ExitMsg = true
+		c.workerNum.Add(-1)
+		return nil
+	}
+	for task.ExcludeWorkerId == request.WorkerId {
+		c.taskChan <- task
+		time.Sleep(time.Millisecond)
+		task = <-c.taskChan
+	}
+	taskRequest := new(TaskRequest)
+	if task.IsCreate {
+		taskRequest.MsgType = Create
+	} else {
+		taskRequest.MsgType = Update
+	}
+	copier.Copy(taskRequest, task)
+	copier.Copy(taskRequest, request)
+	taskRequest.TimeStamp = time.Now()
+	c.TaskRequestChan <- taskRequest
+	copier.Copy(reply, taskRequest)
+	return
+}
+
+func (c *Coordinator) CheckTimeout() {
+	for {
+		c.workingTasks.Range(func(key, value any) bool {
+			taskStatus := value.(*TaskStatus)
+			if time.Since(taskStatus.StartTime) > c.timeout {
+				task := new(Task)
+				copier.Copy(task, taskStatus)
+				c.taskChan <- task
+			}
+			return true
+		})
+		time.Sleep(c.timeout)
+	}
+
 }
 
 // start a thread that listens for RPCs from worker.go

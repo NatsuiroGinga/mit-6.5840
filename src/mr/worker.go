@@ -7,78 +7,26 @@ import (
 	"net/rpc"
 )
 
-// WorkerArgs is the argument of the RPC call
-type WorkerArgs struct {
-	workerId    int         // worker id
-	requestType RequestType // request type
+// WorkerRequest is the argument of the RPC call
+type WorkerRequest struct {
+	WorkerId    int64         // worker id
+	RequestType RequestType // request type
 
-	output   []string // map or reduce output file names
-	input    []string // map or reduce input file names
-	taskId   int      // map or reduce task id
-	taskType TaskType // map or reduce task type
-}
-
-func (args *WorkerArgs) GetWorkerId() int {
-	return args.workerId
-}
-
-func (args *WorkerArgs) GetRequestType() RequestType {
-	return args.requestType
-}
-
-func (args *WorkerArgs) GetOutput() []string {
-	return args.output
-}
-
-func (args *WorkerArgs) GetInput() []string {
-	return args.input
-}
-
-func (args *WorkerArgs) GetTaskId() int {
-	return args.taskId
-}
-
-func (args *WorkerArgs) GetTaskType() TaskType {
-	return args.taskType
+	Output   []string // map or reduce output file names
+	Input    []string // map or reduce input file names
+	TaskId   int64      // map or reduce task id
+	TaskType TaskType // map or reduce task type
 }
 
 // WorkerReply is the reply of the RPC call
 type WorkerReply struct {
-	workerId  int32
-	taskType  TaskType
-	nReduce   int // number of reduce tasks
-	taskId    int32
-	input     []string
-	reduceNum int
-	exitMsg   bool
-}
-
-func (reply *WorkerReply) GetWorkerId() int32 {
-	return reply.workerId
-}
-
-func (reply *WorkerReply) GetTaskType() TaskType {
-	return reply.taskType
-}
-
-func (reply *WorkerReply) GetNReduce() int {
-	return reply.nReduce
-}
-
-func (reply *WorkerReply) GetTaskId() int32 {
-	return reply.taskId
-}
-
-func (reply *WorkerReply) GetInput() []string {
-	return reply.input
-}
-
-func (reply *WorkerReply) GetReduceNum() int {
-	return reply.reduceNum
-}
-
-func (reply *WorkerReply) GetExitMsg() bool {
-	return reply.exitMsg
+	WorkerId  int64
+	TaskType  TaskType
+	NReduce   int // number of reduce tasks
+	TaskId    int64
+	Input     []string
+	ReduceNum int
+	ExitMsg   bool
 }
 
 // Map functions return a slice of KeyValue.
