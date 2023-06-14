@@ -186,6 +186,7 @@ func getTask() (task *Task) {
 	if !call("Coordinator.AssignTask", args, task) {
 		log.Printf("No task available")
 	}
+	log.Printf("Task %d assigned", task.TaskId)
 	return
 }
 
