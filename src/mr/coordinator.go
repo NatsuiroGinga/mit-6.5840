@@ -141,7 +141,26 @@ func (c *Coordinator) AssignTask(args *ExampleArgs, reply *Task) error {
 }
 
 func (c *Coordinator) checkTimeout() {
-	for {
+	times := time.Tick(Timeout)
+	for tick := range times {
+		mu.Lock()
+		log.Printf("check timeout at %v", tick.Format("2006-01-02 15:04:05"))
+
+		if c.Phase == PhaseExit {
+			mu.Unlock()
+			return
+		}
+		c.TaskMeta.Range(func(key, value any) bool {
+			taskMeta := value.(*CoordinatorTask)
+			if taskMeta.Status == StatusInProgress && time.Since(taskMeta.StartTime) > Timeout*2 {
+				c.TaskQueue <- taskMeta.TaskReference
+				taskMeta.Status = StatusIdle
+			}
+			return true
+		})
+		mu.Unlock()
+	}
+	/*for {
 		time.Sleep(Timeout)
 		c.PhaseMu.Lock()
 
@@ -158,7 +177,7 @@ func (c *Coordinator) checkTimeout() {
 			return true
 		})
 		c.PhaseMu.Unlock()
-	}
+	}*/
 }
 
 var mu sync.Mutex
