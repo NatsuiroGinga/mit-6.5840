@@ -132,8 +132,24 @@ func (c *Coordinator) AssignTask(_ *ExampleArgs, reply *Task) error {
 }
 
 func (c *Coordinator) checkTimeout() {
-	for {
+	/*for {
 		time.Sleep(Timeout)
+		if CoordinatorPhase(c.Phase.Load()) == PhaseExit {
+			return
+		}
+		c.TaskMeta.Range(func(key, value any) bool {
+			taskMeta := value.(*CoordinatorTask)
+			if taskMeta.Status == StatusInProgress && time.Since(taskMeta.StartTime) > Timeout*2 {
+				c.TaskQueue <- taskMeta.TaskReference
+				taskMeta.Status = StatusIdle
+			}
+			return true
+		})
+	}*/
+	tick := time.Tick(Timeout)
+	for next := range tick {
+		log.Printf("check timeout at %v", next.Format(time.DateTime))
+
 		if CoordinatorPhase(c.Phase.Load()) == PhaseExit {
 			return
 		}
