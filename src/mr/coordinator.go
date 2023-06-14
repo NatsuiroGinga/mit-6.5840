@@ -117,7 +117,11 @@ func (c *Coordinator) createMapTask() {
 // AssignTask assigns a task to a worker
 func (c *Coordinator) AssignTask(args *ExampleArgs, reply *Task) error {
 	c.TaskQueueMu.Lock()
-	defer c.TaskQueueMu.Unlock()
+	c.PhaseMu.Lock()
+	defer func() {
+		c.TaskQueueMu.Unlock()
+		c.PhaseMu.Unlock()
+	}()
 
 	if len(c.TaskQueue) > 0 {
 		// get task from queue
@@ -127,12 +131,11 @@ func (c *Coordinator) AssignTask(args *ExampleArgs, reply *Task) error {
 		taskMeta := v.(*CoordinatorTask)
 		taskMeta.Status = StatusInProgress
 		taskMeta.StartTime = time.Now()
-	} else if c.PhaseMu.Lock(); c.Phase == PhaseExit { // no more task
+	} else if c.Phase == PhaseExit { // no more task
 		*reply = Task{State: PhaseExit}
 	} else { // wait for task
 		*reply = Task{State: PhaseWait}
 	}
-	c.PhaseMu.Unlock()
 	return nil
 }
 
@@ -166,7 +169,6 @@ func (c *Coordinator) TaskCompleted(task *Task, _ *ExampleReply) error {
 	taskMeta := v.(*CoordinatorTask)
 	// check task status
 	if task.State != c.Phase || taskMeta.Status == StatusCompleted {
-		c.PhaseMu.Unlock()
 		return nil
 	}
 	// update task meta
