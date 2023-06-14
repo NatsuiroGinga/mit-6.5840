@@ -121,16 +121,16 @@ func (c *Coordinator) AssignTask(args *ExampleArgs, reply *Task) error {
 
 	if len(c.TaskQueue) > 0 {
 		// get task from queue
-		reply = <-c.TaskQueue
+		*reply = *<-c.TaskQueue
 		// update task meta
 		v, _ := c.TaskMeta.Load(reply.TaskId)
 		taskMeta := v.(*CoordinatorTask)
 		taskMeta.Status = StatusInProgress
 		taskMeta.StartTime = time.Now()
 	} else if c.PhaseMu.Lock(); c.Phase == PhaseExit { // no more task
-		reply = &Task{State: PhaseExit}
+		*reply = Task{State: PhaseExit}
 	} else { // wait for task
-		reply = &Task{State: PhaseWait}
+		*reply = Task{State: PhaseWait}
 	}
 	c.PhaseMu.Unlock()
 	return nil
