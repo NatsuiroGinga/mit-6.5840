@@ -127,6 +127,7 @@ func (c *Coordinator) AssignTask(_ *ExampleArgs, reply *Task) error {
 		taskMeta := v.(*CoordinatorTask)
 		taskMeta.Status = StatusInProgress
 		taskMeta.StartTime = time.Now()
+		log.Printf("task %d assigned to worker", reply.TaskId)
 	} else if c.Phase == PhaseExit { // no more task
 		*reply = Task{State: PhaseExit}
 	} else { // wait for task
