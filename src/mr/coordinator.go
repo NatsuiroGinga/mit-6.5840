@@ -126,6 +126,7 @@ func (c *Coordinator) AssignTask(_ *ExampleArgs, reply *Task) error {
 		// update task meta
 		v, _ := c.TaskMeta.Load(reply.TaskId)
 		taskMeta := v.(*CoordinatorTask)
+		taskMeta.TaskReference = reply
 		taskMeta.Status = StatusInProgress
 		taskMeta.StartTime = time.Now()
 	} else if c.Phase == PhaseExit { // no more task
