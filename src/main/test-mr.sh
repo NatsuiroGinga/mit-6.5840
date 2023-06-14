@@ -256,7 +256,7 @@ then
 else
   # the -n causes wait to wait for just one child process,
   # rather than waiting for all to finish.
-  wait -n
+  wait
 fi
 
 rm -f $DF
@@ -289,6 +289,7 @@ sort mr-out-0 > mr-correct-crash.txt
 rm -f mr-out*
 
 rm -f mr-done
+# shellcheck disable=SC1105
 ((maybe_quiet $TIMEOUT2 ../mrcoordinator ../pg*txt); touch mr-done ) &
 sleep 1
 
@@ -296,21 +297,21 @@ sleep 1
 maybe_quiet $TIMEOUT2 ../mrworker ../../mrapps/crash.so &
 
 # mimic rpc.go's coordinatorSock()
-SOCKNAME=/var/tmp/5840-mr-`id -u`
+#SOCKNAME=/var/tmp/5840-mr-`id -u`
 
-( while [ -e $SOCKNAME -a ! -f mr-done ]
+( while [ ! -f mr-done ]
   do
     maybe_quiet $TIMEOUT2 ../mrworker ../../mrapps/crash.so
     sleep 1
   done ) &
 
-( while [ -e $SOCKNAME -a ! -f mr-done ]
+( while [ ! -f mr-done ]
   do
     maybe_quiet $TIMEOUT2 ../mrworker ../../mrapps/crash.so
     sleep 1
   done ) &
 
-while [ -e $SOCKNAME -a ! -f mr-done ]
+while [ ! -f mr-done ]
 do
   maybe_quiet $TIMEOUT2 ../mrworker ../../mrapps/crash.so
   sleep 1
@@ -318,7 +319,7 @@ done
 
 wait
 
-rm $SOCKNAME
+# rm $SOCKNAME
 sort mr-out* | grep . > mr-crash-all
 if cmp mr-crash-all mr-correct-crash.txt
 then

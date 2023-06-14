@@ -82,14 +82,23 @@ func doReduce(task *Task, reducef ReduceFunc) {
 		output := reducef(intermediates[i].Key, values)
 
 		// this is the correct format for each line of Reduce output.
-		fmt.Fprintf(tempFile, "%v %v\n", intermediates[i].Key, output)
+		if _, err = fmt.Fprintf(tempFile, "%v %v\n", intermediates[i].Key, output); err != nil {
+			log.Fatalf("cannot write %v", tempFile.Name())
+			return
+		}
 
 		i = j
 	}
-	tempFile.Close()
+	if err = tempFile.Close(); err != nil {
+		log.Fatalf("cannot close %s", tempFile.Name())
+		return
+	}
 	output := fmt.Sprintf("mr-out-%d", task.TaskId)
-	os.Rename(tempFile.Name(), output)
-	task.Output = filepath.Join(dir, output)
+	if err = os.Rename(tempFile.Name(), output); err != nil {
+		log.Fatalf("cannot rename %s to %s", tempFile.Name(), output)
+	}
+	task.Output = output
+	log.Printf("Task %d completed, output file %s generated", task.TaskId, output)
 	TaskCompleted(task)
 }
 
@@ -113,6 +122,7 @@ func doMap(task *Task, mapf MapFunc) {
 	}
 	// update task
 	task.Intermediates = outputs
+	log.Printf("Task %d completed, %d intermediate files generated", task.TaskId, len(outputs))
 	TaskCompleted(task)
 }
 
@@ -155,7 +165,7 @@ func CallExample() {
 func call(rpcname string, args interface{}, reply interface{}) bool {
 	c, err := rpc.DialHTTP("tcp", "127.0.0.1"+":1234")
 	// sockname := coordinatorSock()
-	// c, err := rpc.Dial("tcp", sockname)
+	// c, err := rpc.Dial("unix", sockname)
 	if err != nil {
 		log.Fatal("dialing:", err)
 	}
@@ -173,7 +183,10 @@ func call(rpcname string, args interface{}, reply interface{}) bool {
 func getTask() (task *Task) {
 	args := new(ExampleArgs)
 	task = new(Task)
-	call("Coordinator.AssignTask", args, task)
+	if !call("Coordinator.AssignTask", args, task) {
+		log.Printf("No task available")
+	}
+	log.Printf("Task %d assigned", task.TaskId)
 	return
 }
 
@@ -206,7 +219,7 @@ func readFromLocalFile(files []string) *[]KeyValue {
 		dec := json.NewDecoder(file)
 		for {
 			var kv KeyValue
-			if err := dec.Decode(&kv); err != nil {
+			if err = dec.Decode(&kv); err != nil {
 				break
 			}
 			kvs = append(kvs, kv)

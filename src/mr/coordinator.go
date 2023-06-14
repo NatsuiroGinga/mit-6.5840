@@ -1,22 +1,22 @@
 package mr
 
 import (
-	"errors"
 	"log"
 	"net"
 	"net/http"
 	"net/rpc"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
 type Coordinator struct {
-	TaskQueue chan *Task // task queue
+	TaskQueue   chan *Task  // task queue
+	TaskQueueMu *sync.Mutex // mutex for task queue
 
 	TaskMeta *sync.Map // task id -> task meta
 
-	Phase *atomic.Int32 // current phase
+	Phase   CoordinatorPhase // current phase
+	PhaseMu *sync.Mutex
 
 	NReduce int // number of reduce tasks
 
@@ -49,25 +49,25 @@ func (p CoordinatorPhase) String() string {
 
 // start a thread that listens for RPCs from worker.go
 func (c *Coordinator) server() {
-	_ = rpc.Register(c)
+	rpc.Register(c)
 	rpc.HandleHTTP()
 	l, e := net.Listen("tcp", ":1234")
-	/* sockname := coordinatorSock()
-	os.Remove(sockname)
-	l, e := net.Listen("tcp", sockname) */
+	// sockname := coordinatorSock()
+	// os.Remove(sockname)
+	// l, e := net.Listen("unix", sockname)
 	if e != nil {
 		log.Fatal("listen error:", e)
 	}
 	log.Printf("Coordinator server start at %s", l.Addr())
-	go func() {
-		_ = http.Serve(l, nil)
-	}()
+	go http.Serve(l, nil)
 }
 
 // main/mrcoordinator.go calls Done() periodically to find out
 // if the entire job has finished.
 func (c *Coordinator) Done() bool {
-	return CoordinatorPhase(c.Phase.Load()) == PhaseExit
+	c.PhaseMu.Lock()
+	defer c.PhaseMu.Unlock()
+	return c.Phase == PhaseExit
 }
 
 // create a Coordinator.
@@ -77,10 +77,12 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	c := &Coordinator{
 		TaskQueue:     make(chan *Task, Max(nReduce, len(files))),
 		TaskMeta:      new(sync.Map),
-		Phase:         new(atomic.Int32),
+		TaskQueueMu:   new(sync.Mutex),
+		Phase:         PhaseMap,
 		NReduce:       nReduce,
 		Inputs:        files,
 		Intermediates: make([][]string, nReduce),
+		PhaseMu:       new(sync.Mutex),
 	}
 
 	// create map tasks
@@ -108,13 +110,15 @@ func (c *Coordinator) createMapTask() {
 		c.TaskMeta.Store(id, &CoordinatorTask{
 			Status:        StatusIdle,
 			TaskReference: task,
-			StartTime:     time.Now(),
 		})
 	}
 }
 
 // AssignTask assigns a task to a worker
 func (c *Coordinator) AssignTask(_ *ExampleArgs, reply *Task) error {
+	mu.Lock()
+	defer mu.Unlock()
+
 	if len(c.TaskQueue) > 0 {
 		// get task from queue
 		*reply = *<-c.TaskQueue
@@ -123,36 +127,44 @@ func (c *Coordinator) AssignTask(_ *ExampleArgs, reply *Task) error {
 		taskMeta := v.(*CoordinatorTask)
 		taskMeta.Status = StatusInProgress
 		taskMeta.StartTime = time.Now()
-		// signal a worker to start
-		waitCond.Signal()
-	} else if CoordinatorPhase(c.Phase.Load()) == PhaseExit { // no more task
+		log.Printf("task %d assigned to worker", reply.TaskId)
+	} else if c.Phase == PhaseExit { // no more task
 		*reply = Task{State: PhaseExit}
 	} else { // wait for task
 		*reply = Task{State: PhaseWait}
 	}
+
 	return nil
 }
 
 func (c *Coordinator) checkTimeout() {
+	times := time.Tick(Timeout)
+	for tick := range times {
+		mu.Lock()
+		log.Printf("check timeout at %v", tick.Format("2006-01-02 15:04:05"))
+
+		if c.Phase == PhaseExit {
+			mu.Unlock()
+			return
+		}
+		c.TaskMeta.Range(func(key, value any) bool {
+			taskMeta := value.(*CoordinatorTask)
+			if taskMeta.Status == StatusInProgress && time.Since(taskMeta.StartTime) >= Timeout {
+				log.Printf("task %d timeout", taskMeta.TaskReference.TaskId)
+				c.TaskQueue <- taskMeta.TaskReference
+				taskMeta.Status = StatusIdle
+				log.Printf("task %d added to queue", taskMeta.TaskReference.TaskId)
+			}
+			return true
+		})
+		mu.Unlock()
+	}
 	/*for {
 		time.Sleep(Timeout)
-		if CoordinatorPhase(c.Phase.Load()) == PhaseExit {
-			return
-		}
-		c.TaskMeta.Range(func(key, value any) bool {
-			taskMeta := value.(*CoordinatorTask)
-			if taskMeta.Status == StatusInProgress && time.Since(taskMeta.StartTime) > Timeout*2 {
-				c.TaskQueue <- taskMeta.TaskReference
-				taskMeta.Status = StatusIdle
-			}
-			return true
-		})
-	}*/
-	tick := time.Tick(Timeout)
-	for next := range tick {
-		log.Printf("check timeout at %v", next.Format(time.DateTime))
+		c.PhaseMu.Lock()
 
-		if CoordinatorPhase(c.Phase.Load()) == PhaseExit {
+		if c.Phase == PhaseExit {
+			c.PhaseMu.Unlock()
 			return
 		}
 		c.TaskMeta.Range(func(key, value any) bool {
@@ -163,25 +175,34 @@ func (c *Coordinator) checkTimeout() {
 			}
 			return true
 		})
-	}
+		c.PhaseMu.Unlock()
+	}*/
 }
 
+var mu sync.Mutex
+
 func (c *Coordinator) TaskCompleted(task *Task, _ *ExampleReply) error {
+	mu.Lock()
 	// update task meta
 	v, _ := c.TaskMeta.Load(task.TaskId)
 	taskMeta := v.(*CoordinatorTask)
 	// check task status
-	if task.State != CoordinatorPhase(c.Phase.Load()) || taskMeta.Status == StatusCompleted {
-		return errors.New("invalid task")
+	if task.State != c.Phase || taskMeta.Status == StatusCompleted {
+		log.Printf("task %d has been completed or phase is not %s", task.TaskId, phaseName[c.Phase])
+		return nil
 	}
 	// update task meta
 	taskMeta.Status = StatusCompleted
-	go c.processTaskResult(task)
+	mu.Unlock()
+	defer c.processTaskResult(task)
 
 	return nil
 }
 
 func (c *Coordinator) processTaskResult(task *Task) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	switch task.State {
 	case PhaseMap:
 		c.processMapTaskResult(task)
@@ -198,16 +219,18 @@ func (c *Coordinator) processMapTaskResult(task *Task) {
 	}
 	// check if all map tasks are completed
 	if c.allTaskDone() {
-		// start reduce phase
+		log.Printf("all map tasks are completed")
+		// start reduce phase1
 		c.createReduceTask()
-		c.Phase.Store(int32(PhaseReduce))
+		c.Phase = PhaseReduce
 	}
 }
 
 // processReduceTaskResult processes the result of reduce task
 func (c *Coordinator) processReduceTaskResult(_ *Task) {
 	if c.allTaskDone() {
-		c.Phase.Store(int32(PhaseExit))
+		log.Printf("all reduce tasks are completed")
+		c.Phase = PhaseExit
 	}
 }
 
@@ -241,7 +264,6 @@ func (c *Coordinator) createReduceTask() {
 		c.TaskMeta.Store(task.TaskId, &CoordinatorTask{
 			Status:        StatusIdle,
 			TaskReference: task,
-			StartTime:     time.Now(),
 		})
 	}
 }
