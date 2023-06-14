@@ -5,7 +5,6 @@ import (
 	"net"
 	"net/http"
 	"net/rpc"
-	"os"
 	"sync"
 	"time"
 )
@@ -52,13 +51,14 @@ func (p CoordinatorPhase) String() string {
 func (c *Coordinator) server() {
 	rpc.Register(c)
 	rpc.HandleHTTP()
-	// l, e := net.Listen("tcp", ":1234")
-	sockname := coordinatorSock()
+	l, e := net.Listen("tcp", ":8888")
+	/* sockname := coordinatorSock()
 	os.Remove(sockname)
-	l, e := net.Listen("tcp", sockname)
+	l, e := net.Listen("tcp", sockname) */
 	if e != nil {
 		log.Fatal("listen error:", e)
 	}
+	log.Printf("Coordinator server start at %s", l.Addr())
 	go http.Serve(l, nil)
 }
 
