@@ -77,6 +77,7 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	c := &Coordinator{
 		TaskQueue:     make(chan *Task, Max(nReduce, len(files))),
 		TaskMeta:      new(sync.Map),
+		TaskQueueMu:   new(sync.Mutex),
 		Phase:         PhaseMap,
 		NReduce:       nReduce,
 		Inputs:        files,
