@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"time"
 )
 
 type MapFunc func(filename string, contents string) (kvs []KeyValue)
@@ -43,7 +42,8 @@ func Worker(mapf func(string, string) []KeyValue,
 		case PhaseReduce:
 			doReduce(task, reducef)
 		case PhaseWait:
-			time.Sleep(Timeout)
+			// time.Sleep(Timeout)
+			waitCond.Wait()
 		case PhaseExit:
 			log.Println("Exit")
 			return

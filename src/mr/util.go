@@ -28,3 +28,5 @@ func Max[T Integer](x, y T) T {
 func Bytes2Str(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
+
+var waitCond = &sync.Cond{L: new(sync.Mutex)}
