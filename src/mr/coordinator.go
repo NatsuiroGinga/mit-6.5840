@@ -1,6 +1,7 @@
 package mr
 
 import (
+	"errors"
 	"log"
 	"net"
 	"net/http"
@@ -107,6 +108,7 @@ func (c *Coordinator) createMapTask() {
 		c.TaskMeta.Store(id, &CoordinatorTask{
 			Status:        StatusIdle,
 			TaskReference: task,
+			StartTime:     time.Now(),
 		})
 	}
 }
@@ -170,7 +172,7 @@ func (c *Coordinator) TaskCompleted(task *Task, _ *ExampleReply) error {
 	taskMeta := v.(*CoordinatorTask)
 	// check task status
 	if task.State != CoordinatorPhase(c.Phase.Load()) || taskMeta.Status == StatusCompleted {
-		return nil
+		return errors.New("invalid task")
 	}
 	// update task meta
 	taskMeta.Status = StatusCompleted
@@ -239,6 +241,7 @@ func (c *Coordinator) createReduceTask() {
 		c.TaskMeta.Store(task.TaskId, &CoordinatorTask{
 			Status:        StatusIdle,
 			TaskReference: task,
+			StartTime:     time.Now(),
 		})
 	}
 }
