@@ -1,6 +1,9 @@
 package mr
 
-import "sync"
+import (
+	"sync"
+	"unsafe"
+)
 
 // MapLen returns the length of the sync.Map
 func MapLen(mp *sync.Map) (length int) {
@@ -9,4 +12,19 @@ func MapLen(mp *sync.Map) (length int) {
 		return true
 	})
 	return
+}
+
+type Integer interface {
+	int | int64 | int32 | int16 | int8
+}
+
+func Max[T Integer](x, y T) T {
+	if x > y {
+		return x
+	}
+	return y
+}
+
+func Bytes2Str(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
 }

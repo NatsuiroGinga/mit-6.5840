@@ -2,65 +2,39 @@ package mr
 
 import "time"
 
-// TaskType is the type of the task
-type TaskType int
+type Task struct {
+	TaskId        int
+	State         CoordinatorPhase
+	Input         string
+	NReduce       int
+	Intermediates []string // intermediate files (map) or input files (reduce)
+	Output        string   // output file (reduce)
+}
+
+// TaskMeta is the meta data of a task
+type CoordinatorTask struct {
+	Status        TaskStatus
+	TaskReference *Task
+	StartTime     time.Time
+}
+
+type TaskStatus int
 
 const (
-	Map    TaskType = iota + 1 // execute Map task
-	Reduce                     // execute Reduce task
+	StatusIdle       TaskStatus = 1 + iota // task is idle
+	StatusInProgress                       // task is in progress
+	StatusCompleted                        // task is completed
 )
 
-var taskTypes = [...]string{
-	1: "Map",
-	2: "Reduce",
+var taskStatusName = [...]string{
+	1: "Idle",
+	2: "InProgress",
+	3: "Completed",
 }
 
-func (t TaskType) String() string {
-	if t <= 0 || int(t) >= len(taskTypes) {
+func (t TaskStatus) String() string {
+	if t <= 0 || int(t) >= len(taskStatusName) {
 		return "Unknown"
 	}
-	return taskTypes[t]
-}
-
-// Task is the task to be executed
-type Task struct {
-	Input           []string
-	IsCreate        bool
-	TaskType        TaskType
-	Id              int64
-	ExcludeWorkerId int64
-	ReduceNum       int
-	IsExit          bool
-}
-
-func (t *Task) TaskId(id int64) {
-	t.Id = id
-}
-
-func (t *Task) WorkerId(id int64) {
-	t.ExcludeWorkerId = id
-}
-
-type TaskRequest struct {
-	MsgType   MsgType
-	TaskId    int64
-	TaskType  TaskType
-	Input     []string
-	Output    []string
-	TimeStamp time.Time
-	WorkerId  int64
-	ReduceNum int
-}
-
-func (request *TaskRequest) StartTime() time.Time {
-	return request.TimeStamp
-}
-
-type TaskStatus struct {
-	TaskId    int64
-	TaskType  TaskType
-	Input     []string
-	StartTime time.Time
-	WorkerId  int32
-	ReduceNum int
+	return taskStatusName[t]
 }

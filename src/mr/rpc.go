@@ -9,7 +9,11 @@ package mr
 import (
 	"os"
 	"strconv"
+	"time"
 )
+
+// Timeout for RPC call
+const Timeout = 5 * time.Second
 
 //
 // example to show how to declare the arguments
@@ -34,16 +38,4 @@ func coordinatorSock() string {
 	s := "/var/tmp/5840-mr-"
 	s += strconv.Itoa(os.Getuid())
 	return s
-}
-
-// RPCHandler is the interface for RPC handlers
-type RPCHandler interface {
-	// Handle handles the task
-	HandleTask(request *TaskRequest, reply *WorkerReply) error
-	// HandleWorker handles the worker
-	HandleWorker(request *WorkerRequest, reply *WorkerReply) error
-	// CheckTimeout checks the timeout
-	CheckTimeout()
-	// Done returns whether the job is done
-	Done() bool
 }
