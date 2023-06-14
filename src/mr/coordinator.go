@@ -129,10 +129,10 @@ func (c *Coordinator) AssignTask(args *ExampleArgs, reply *Task) error {
 		taskMeta.StartTime = time.Now()
 	} else if c.PhaseMu.Lock(); c.Phase == PhaseExit { // no more task
 		reply = &Task{State: PhaseExit}
-		c.PhaseMu.Unlock()
 	} else { // wait for task
 		reply = &Task{State: PhaseWait}
 	}
+	c.PhaseMu.Unlock()
 	return nil
 }
 
