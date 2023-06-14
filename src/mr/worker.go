@@ -89,7 +89,7 @@ func doReduce(task *Task, reducef ReduceFunc) {
 	tempFile.Close()
 	output := fmt.Sprintf("mr-out-%d", task.TaskId)
 	os.Rename(tempFile.Name(), output)
-	task.Output = filepath.Join(dir, output)
+	task.Output = output
 	TaskCompleted(task)
 }
 
@@ -206,7 +206,7 @@ func readFromLocalFile(files []string) *[]KeyValue {
 		dec := json.NewDecoder(file)
 		for {
 			var kv KeyValue
-			if err := dec.Decode(&kv); err != nil {
+			if err = dec.Decode(&kv); err != nil {
 				break
 			}
 			kvs = append(kvs, kv)

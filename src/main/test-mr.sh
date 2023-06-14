@@ -256,7 +256,7 @@ then
 else
   # the -n causes wait to wait for just one child process,
   # rather than waiting for all to finish.
-  wait -n
+  wait
 fi
 
 rm -f $DF
@@ -289,6 +289,7 @@ sort mr-out-0 > mr-correct-crash.txt
 rm -f mr-out*
 
 rm -f mr-done
+# shellcheck disable=SC1105
 ((maybe_quiet $TIMEOUT2 ../mrcoordinator ../pg*txt); touch mr-done ) &
 sleep 1
 

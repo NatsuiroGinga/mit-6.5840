@@ -161,10 +161,10 @@ func (c *Coordinator) checkTimeout() {
 	}
 }
 
-func (c *Coordinator) TaskCompleted(task *Task, _ *ExampleReply) error {
-	c.PhaseMu.Lock()
-	defer c.PhaseMu.Unlock()
+var mu sync.Mutex
 
+func (c *Coordinator) TaskCompleted(task *Task, _ *ExampleReply) error {
+	mu.Lock()
 	// update task meta
 	v, _ := c.TaskMeta.Load(task.TaskId)
 	taskMeta := v.(*CoordinatorTask)
@@ -174,12 +174,16 @@ func (c *Coordinator) TaskCompleted(task *Task, _ *ExampleReply) error {
 	}
 	// update task meta
 	taskMeta.Status = StatusCompleted
-	go c.processTaskResult(task)
+	mu.Unlock()
+	defer c.processTaskResult(task)
 
 	return nil
 }
 
 func (c *Coordinator) processTaskResult(task *Task) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	switch task.State {
 	case PhaseMap:
 		c.processMapTaskResult(task)
