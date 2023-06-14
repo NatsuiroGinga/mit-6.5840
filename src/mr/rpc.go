@@ -7,6 +7,8 @@ package mr
 //
 
 import (
+	"os"
+	"strconv"
 	"time"
 )
 
@@ -33,7 +35,7 @@ type ExampleReply struct {
 // Can't use the current directory since
 // Athena AFS doesn't support UNIX-domain sockets.
 func coordinatorSock() string {
-	// s := "/var/tmp/5840-mr-"
-	// s += strconv.Itoa(os.Getuid())
-	return "127.0.0.1:8888"
+	s := "/var/tmp/5840-mr-"
+	s += strconv.Itoa(os.Getuid())
+	return s
 }
