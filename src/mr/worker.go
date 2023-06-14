@@ -82,13 +82,21 @@ func doReduce(task *Task, reducef ReduceFunc) {
 		output := reducef(intermediates[i].Key, values)
 
 		// this is the correct format for each line of Reduce output.
-		fmt.Fprintf(tempFile, "%v %v\n", intermediates[i].Key, output)
+		if _, err = fmt.Fprintf(tempFile, "%v %v\n", intermediates[i].Key, output); err != nil {
+			log.Fatalf("cannot write %v", tempFile.Name())
+			return
+		}
 
 		i = j
 	}
-	tempFile.Close()
+	if err = tempFile.Close(); err != nil {
+		log.Fatalf("cannot close %s", tempFile.Name())
+		return
+	}
 	output := fmt.Sprintf("mr-out-%d", task.TaskId)
-	os.Rename(tempFile.Name(), output)
+	if err = os.Rename(tempFile.Name(), output); err != nil {
+		log.Fatalf("cannot rename %s to %s", tempFile.Name(), output)
+	}
 	task.Output = output
 	log.Printf("Task %d completed, output file %s generated", task.TaskId, output)
 	TaskCompleted(task)
