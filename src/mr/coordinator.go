@@ -116,13 +116,9 @@ func (c *Coordinator) createMapTask() {
 }
 
 // AssignTask assigns a task to a worker
-func (c *Coordinator) AssignTask(args *ExampleArgs, reply *Task) error {
-	c.TaskQueueMu.Lock()
-	c.PhaseMu.Lock()
-	defer func() {
-		c.TaskQueueMu.Unlock()
-		c.PhaseMu.Unlock()
-	}()
+func (c *Coordinator) AssignTask(_ *ExampleArgs, reply *Task) error {
+	mu.Lock()
+	defer mu.Unlock()
 
 	if len(c.TaskQueue) > 0 {
 		// get task from queue
@@ -137,6 +133,7 @@ func (c *Coordinator) AssignTask(args *ExampleArgs, reply *Task) error {
 	} else { // wait for task
 		*reply = Task{State: PhaseWait}
 	}
+
 	return nil
 }
 
@@ -191,6 +188,7 @@ func (c *Coordinator) TaskCompleted(task *Task, _ *ExampleReply) error {
 	taskMeta := v.(*CoordinatorTask)
 	// check task status
 	if task.State != c.Phase || taskMeta.Status == StatusCompleted {
+		log.Printf("task %d has been completed or phase is not %s", task.TaskId, phaseName[c.Phase])
 		return nil
 	}
 	// update task meta
@@ -223,18 +221,14 @@ func (c *Coordinator) processMapTaskResult(task *Task) {
 	if c.allTaskDone() {
 		// start reduce phase
 		c.createReduceTask()
-		c.PhaseMu.Lock()
 		c.Phase = PhaseReduce
-		c.PhaseMu.Unlock()
 	}
 }
 
 // processReduceTaskResult processes the result of reduce task
-func (c *Coordinator) processReduceTaskResult(task *Task) {
+func (c *Coordinator) processReduceTaskResult(_ *Task) {
 	if c.allTaskDone() {
-		c.PhaseMu.Lock()
 		c.Phase = PhaseExit
-		c.PhaseMu.Unlock()
 	}
 }
 
