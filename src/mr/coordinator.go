@@ -110,7 +110,6 @@ func (c *Coordinator) createMapTask() {
 		c.TaskMeta.Store(id, &CoordinatorTask{
 			Status:        StatusIdle,
 			TaskReference: task,
-			StartTime:     time.Now(),
 		})
 	}
 }
@@ -126,7 +125,6 @@ func (c *Coordinator) AssignTask(_ *ExampleArgs, reply *Task) error {
 		// update task meta
 		v, _ := c.TaskMeta.Load(reply.TaskId)
 		taskMeta := v.(*CoordinatorTask)
-		taskMeta.TaskReference = reply
 		taskMeta.Status = StatusInProgress
 		taskMeta.StartTime = time.Now()
 	} else if c.Phase == PhaseExit { // no more task
@@ -220,7 +218,8 @@ func (c *Coordinator) processMapTaskResult(task *Task) {
 	}
 	// check if all map tasks are completed
 	if c.allTaskDone() {
-		// start reduce phase
+		log.Printf("all map tasks are completed")
+		// start reduce phase1
 		c.createReduceTask()
 		c.Phase = PhaseReduce
 	}
@@ -229,6 +228,7 @@ func (c *Coordinator) processMapTaskResult(task *Task) {
 // processReduceTaskResult processes the result of reduce task
 func (c *Coordinator) processReduceTaskResult(_ *Task) {
 	if c.allTaskDone() {
+		log.Printf("all reduce tasks are completed")
 		c.Phase = PhaseExit
 	}
 }
@@ -263,7 +263,6 @@ func (c *Coordinator) createReduceTask() {
 		c.TaskMeta.Store(task.TaskId, &CoordinatorTask{
 			Status:        StatusIdle,
 			TaskReference: task,
-			StartTime:     time.Now(),
 		})
 	}
 }

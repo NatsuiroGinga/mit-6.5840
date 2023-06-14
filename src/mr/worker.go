@@ -183,7 +183,9 @@ func call(rpcname string, args interface{}, reply interface{}) bool {
 func getTask() (task *Task) {
 	args := new(ExampleArgs)
 	task = new(Task)
-	call("Coordinator.AssignTask", args, task)
+	if !call("Coordinator.AssignTask", args, task) {
+		log.Printf("No task available")
+	}
 	return
 }
 
