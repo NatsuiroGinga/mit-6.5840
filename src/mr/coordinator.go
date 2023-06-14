@@ -110,6 +110,7 @@ func (c *Coordinator) createMapTask() {
 		c.TaskMeta.Store(id, &CoordinatorTask{
 			Status:        StatusIdle,
 			TaskReference: task,
+			StartTime:     time.Now(),
 		})
 	}
 }
@@ -242,6 +243,7 @@ func (c *Coordinator) createReduceTask() {
 		c.TaskMeta.Store(task.TaskId, &CoordinatorTask{
 			Status:        StatusIdle,
 			TaskReference: task,
+			StartTime:     time.Now(),
 		})
 	}
 }
