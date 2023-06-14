@@ -152,7 +152,7 @@ func (c *Coordinator) checkTimeout() {
 		}
 		c.TaskMeta.Range(func(key, value any) bool {
 			taskMeta := value.(*CoordinatorTask)
-			if taskMeta.Status == StatusInProgress && time.Since(taskMeta.StartTime) > Timeout*2 {
+			if taskMeta.Status == StatusInProgress && time.Since(taskMeta.StartTime) >= Timeout {
 				log.Printf("task %d timeout", taskMeta.TaskReference.TaskId)
 				c.TaskQueue <- taskMeta.TaskReference
 				taskMeta.Status = StatusIdle

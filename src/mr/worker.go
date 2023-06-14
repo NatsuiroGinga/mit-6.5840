@@ -90,6 +90,7 @@ func doReduce(task *Task, reducef ReduceFunc) {
 	output := fmt.Sprintf("mr-out-%d", task.TaskId)
 	os.Rename(tempFile.Name(), output)
 	task.Output = output
+	log.Printf("Task %d completed, output file %s generated", task.TaskId, output)
 	TaskCompleted(task)
 }
 
@@ -113,6 +114,7 @@ func doMap(task *Task, mapf MapFunc) {
 	}
 	// update task
 	task.Intermediates = outputs
+	log.Printf("Task %d completed, %d intermediate files generated", task.TaskId, len(outputs))
 	TaskCompleted(task)
 }
 
