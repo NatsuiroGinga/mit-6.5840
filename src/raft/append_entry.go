@@ -1,6 +1,8 @@
 package raft
 
-import "6.5840/kvraft"
+import (
+	"github.com/rs/zerolog/log"
+)
 
 type AppendEntriesArgs struct {
 	Term         int
@@ -70,14 +72,17 @@ func (rf *Raft) leaderSendEntries(serverId int, args *AppendEntriesArgs) {
 			next := match + 1
 			rf.nextIndex[serverId] = max(rf.nextIndex[serverId], next)
 			rf.matchIndex[serverId] = max(rf.matchIndex[serverId], match)
-			kvraft.DPrintf("[%v]: %v append success next %v match %v", rf.me, serverId, rf.nextIndex[serverId], rf.matchIndex[serverId])
+			// kvraft.DPrintf("[%v]: %v append success next %v match %v", rf.me, serverId, rf.nextIndex[serverId], rf.matchIndex[serverId])
+			log.Debug().Msgf("[%v]: %v append success next %v match %v", rf.me, serverId, rf.nextIndex[serverId], rf.matchIndex[serverId])
 		} else if reply.Conflict {
-			kvraft.DPrintf("[%v]: Conflict from %v %#v", rf.me, serverId, reply)
+			// kvraft.DPrintf("[%v]: Conflict from %v %#v", rf.me, serverId, reply)
+			log.Debug().Msgf("[%v]: Conflict from %v %#v", rf.me, serverId, reply)
 			if reply.XTerm == -1 {
 				rf.nextIndex[serverId] = reply.XLen
 			} else {
 				lastLogInXTerm := rf.findLastLogInTerm(reply.XTerm)
-				kvraft.DPrintf("[%v]: lastLogInXTerm %v", rf.me, lastLogInXTerm)
+				// kvraft.DPrintf("[%v]: lastLogInXTerm %v", rf.me, lastLogInXTerm)
+				log.Debug().Msgf("[%v]: lastLogInXTerm %v", rf.me, lastLogInXTerm)
 				if lastLogInXTerm > 0 {
 					rf.nextIndex[serverId] = lastLogInXTerm
 				} else {
@@ -85,7 +90,8 @@ func (rf *Raft) leaderSendEntries(serverId int, args *AppendEntriesArgs) {
 				}
 			}
 
-			kvraft.DPrintf("[%v]: leader nextIndex[%v] %v", rf.me, serverId, rf.nextIndex[serverId])
+			// kvraft.DPrintf("[%v]: leader nextIndex[%v] %v", rf.me, serverId, rf.nextIndex[serverId])
+			log.Debug().Msgf("[%v]: leader nextIndex[%v] %v", rf.me, serverId, rf.nextIndex[serverId])
 		} else if rf.nextIndex[serverId] > 1 {
 			rf.nextIndex[serverId]--
 		}
@@ -122,7 +128,8 @@ func (rf *Raft) leaderCommitRule() {
 			}
 			if counter > len(rf.peers)/2 {
 				rf.commitIndex = n
-				kvraft.DPrintf("[%v] leader尝试提交 index %v", rf.me, rf.commitIndex)
+				// kvraft.DPrintf("[%v] leader尝试提交 index %v", rf.me, rf.commitIndex)
+				log.Debug().Msgf("[%v] leader尝试提交 index %v", rf.me, rf.commitIndex)
 				rf.apply()
 				break
 			}
@@ -133,7 +140,8 @@ func (rf *Raft) leaderCommitRule() {
 func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply) {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
-	kvraft.DPrintf("[%d]: (term %d) follower 收到 [%v] AppendEntries %v, prevIndex %v, prevTerm %v", rf.me, rf.currentTerm, args.LeaderId, args.Entries, args.PrevLogIndex, args.PrevLogTerm)
+	// kvraft.DPrintf("[%d]: (term %d) follower 收到 [%v] AppendEntries %v, prevIndex %v, prevTerm %v", rf.me, rf.currentTerm, args.LeaderId, args.Entries, args.PrevLogIndex, args.PrevLogTerm)
+	log.Debug().Msgf("[%d]: (term %d) follower 收到 [%v] AppendEntries %v, prevIndex %v, prevTerm %v", rf.me, rf.currentTerm, args.LeaderId, args.Entries, args.PrevLogIndex, args.PrevLogTerm)
 	// rules for servers
 	// all servers 2
 	reply.Success = false
@@ -159,7 +167,8 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		reply.XTerm = -1
 		reply.XIndex = -1
 		reply.XLen = rf.log.len()
-		kvraft.DPrintf("[%v]: Conflict XTerm %v, XIndex %v, XLen %v", rf.me, reply.XTerm, reply.XIndex, reply.XLen)
+		// kvraft.DPrintf("[%v]: Conflict XTerm %v, XIndex %v, XLen %v", rf.me, reply.XTerm, reply.XIndex, reply.XLen)
+		log.Debug().Msgf("[%v]: Conflict XTerm %v, XIndex %v, XLen %v", rf.me, reply.XTerm, reply.XIndex, reply.XLen)
 		return
 	}
 	if rf.log.at(args.PrevLogIndex).Term != args.PrevLogTerm {
@@ -173,7 +182,8 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		}
 		reply.XTerm = xTerm
 		reply.XLen = rf.log.len()
-		kvraft.DPrintf("[%v]: Conflict XTerm %v, XIndex %v, XLen %v", rf.me, reply.XTerm, reply.XIndex, reply.XLen)
+		// kvraft.DPrintf("[%v]: Conflict XTerm %v, XIndex %v, XLen %v", rf.me, reply.XTerm, reply.XIndex, reply.XLen)
+		log.Debug().Msgf("[%v]: Conflict XTerm %v, XIndex %v, XLen %v", rf.me, reply.XTerm, reply.XIndex, reply.XLen)
 		return
 	}
 
@@ -186,7 +196,8 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		// append entries rpc 4
 		if entry.Index > rf.log.lastLog().Index {
 			rf.log.append(args.Entries[idx:]...)
-			kvraft.DPrintf("[%d]: follower append [%v]", rf.me, args.Entries[idx:])
+			// kvraft.DPrintf("[%d]: follower append [%v]", rf.me, args.Entries[idx:])
+			log.Debug().Msgf("[%d]: follower append [%v]", rf.me, args.Entries[idx:])
 			rf.persist()
 			break
 		}

@@ -1,7 +1,7 @@
 package raft
 
 import (
-	"6.5840/kvraft"
+	"github.com/rs/zerolog/log"
 )
 
 // example RequestVote RPC arguments structure.
@@ -23,12 +23,14 @@ type RequestVoteReply struct {
 }
 
 func (rf *Raft) candidateRequestVote(serverId int, args *RequestVoteArgs, voteCh chan<- struct{}) {
-	kvraft.DPrintf("[%d]: (term %d) 向 %d 请求投票", rf.me, rf.currentTerm, serverId)
+	// kvraft.DPrintf("[%d]: (term %d) 向 %d 请求投票", rf.me, rf.currentTerm, serverId)
+	log.Debug().Msgf("[%d]: (term %d) 向 %d 请求投票", rf.me, rf.currentTerm, serverId)
 	// 1. send RequestVote RPCs to all other servers
 	reply := new(RequestVoteReply)
 	ok := rf.sendRequestVote(serverId, args, reply)
 	if !ok {
-		kvraft.DPrintf("[%d]: (term %d) 向 %d 请求投票失败", rf.me, rf.currentTerm, serverId)
+		// kvraft.DPrintf("[%d]: (term %d) 向 %d 请求投票失败", rf.me, rf.currentTerm, serverId)
+		log.Debug().Msgf("[%d]: (term %d) 向 %d 请求投票失败", rf.me, rf.currentTerm, serverId)
 		return
 	}
 	// 2. handle reply
@@ -36,22 +38,26 @@ func (rf *Raft) candidateRequestVote(serverId int, args *RequestVoteArgs, voteCh
 	defer rf.mu.Unlock()
 
 	if reply.Term > rf.currentTerm {
-		kvraft.DPrintf("[%d]: (term %d) 收到 %d 的投票请求，但是自己的 term 过时，变为 follower", rf.me, rf.currentTerm, serverId)
+		// kvraft.DPrintf("[%d]: (term %d) 收到 %d 的投票请求，但是自己的 term 过时，变为 follower", rf.me, rf.currentTerm, serverId)
+		log.Debug().Msgf("[%d]: (term %d) 收到 %d 的投票请求，但是自己的 term 过时，变为 follower", rf.me, rf.currentTerm, serverId)
 		rf.setNewTerm(reply.Term)
 		return
 	}
 
 	if reply.Term < rf.currentTerm {
-		kvraft.DPrintf("[%d]: %d 的term %d 已经失效，结束\n", rf.me, serverId, reply.Term)
+		// kvraft.DPrintf("[%d]: %d 的term %d 已经失效，结束\n", rf.me, serverId, reply.Term)
+		log.Debug().Msgf("[%d]: %d 的term %d 已经失效，结束\n", rf.me, serverId, reply.Term)
 		return
 	}
 
 	if !reply.VoteGranted {
-		kvraft.DPrintf("[%d]: (term %d) %d 拒绝了投票请求", rf.me, rf.currentTerm, serverId)
+		// kvraft.DPrintf("[%d]: (term %d) %d 拒绝了投票请求", rf.me, rf.currentTerm, serverId)
+		log.Debug().Msgf("[%d]: (term %d) %d 拒绝了投票请求", rf.me, rf.currentTerm, serverId)
 		return
 	}
 
-	kvraft.DPrintf("[%d]: (term %d) %d 同意了投票请求", rf.me, rf.currentTerm, serverId)
+	// kvraft.DPrintf("[%d]: (term %d) %d 同意了投票请求", rf.me, rf.currentTerm, serverId)
+	log.Debug().Msgf("[%d]: (term %d) %d 同意了投票请求", rf.me, rf.currentTerm, serverId)
 
 	voteCh <- struct{}{}
 }

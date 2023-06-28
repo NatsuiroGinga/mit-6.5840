@@ -23,10 +23,16 @@ import (
 	"sync/atomic"
 	"time"
 
-	"6.5840/kvraft"
+	"github.com/rs/zerolog/log"
+	"lib/logger"
+
 	//	"6.5840/labgob"
 	"6.5840/labrpc"
 )
+
+func init() {
+	logger.Init()
+}
 
 // as each Raft peer becomes aware that successive log entries are
 // committed, the peer should send an ApplyMsg to the service (or
@@ -107,7 +113,8 @@ type Raft struct {
 
 func (rf *Raft) apply() {
 	rf.applyCond.Broadcast()
-	kvraft.DPrintf("[%v]: rf.applyCond.Broadcast()", rf.me)
+	log.Debug().Msgf("[%v]: rf.applyCond.Broadcast()", rf.me)
+	// kvraft.DPrintf("[%v]: rf.applyCond.Broadcast()", rf.me)
 }
 
 func (rf *Raft) SetCurrentTerm(currentTerm int) {
@@ -115,7 +122,8 @@ func (rf *Raft) SetCurrentTerm(currentTerm int) {
 		rf.currentTerm = currentTerm
 		rf.votedFor = -1
 		rf.state = Follower
-		kvraft.DPrintf("Raft %d: set currentTerm to %v", rf.me, rf.currentTerm)
+		// kvraft.DPrintf("Raft %d: set currentTerm to %v", rf.me, rf.currentTerm)
+		log.Debug().Msgf("Raft %d: set currentTerm to %v", rf.me, rf.currentTerm)
 		rf.persist()
 	}
 }
@@ -188,7 +196,8 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 		reply.VoteGranted = true
 		reply.Term = rf.currentTerm
 		rf.persist()
-		kvraft.DPrintf("Raft %d: vote for %d", rf.me, args.CandidateId)
+		// kvraft.DPrintf("Raft %d: vote for %d", rf.me, args.CandidateId)
+		log.Debug().Msgf("Raft %d: vote for %d", rf.me, args.CandidateId)
 		// TODO reset election timer
 	} else {
 		reply.VoteGranted = false
@@ -278,7 +287,8 @@ func (rf *Raft) ticker() {
 		// Your code here (2A)
 		// Check if a leader election should be started.
 		for next := range ticker.C {
-			kvraft.DPrintf("check election timeout %v", next)
+			// kvraft.DPrintf("check election timeout %v", next)
+			log.Debug().Msgf("check election timeout %v", next)
 			rf.mu.Lock()
 			if rf.state == Leader {
 				rf.appendEntries(true)
