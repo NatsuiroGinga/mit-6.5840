@@ -35,26 +35,41 @@ func (rf *Raft) setNewTerm(term int) {
 }
 
 func (rf *Raft) leaderElection() {
+	// 1. increment currentTerm
 	rf.currentTerm++
-	rf.state = Candidate
+	// 2. vote for self
 	rf.votedFor = rf.me
-	rf.persist()
+	// 3. reset election timer
 	rf.resetElectionTimer()
-	term := rf.currentTerm
-	voteCounter := 1
-	lastLog := rf.log.lastLog()
-	kvraft.DPrintf("[%v]: start leader election, term %d\n", rf.me, rf.currentTerm)
-	args := RequestVoteArgs{
-		Term:         term,
-		CandidateId:  rf.me,
-		LastLogIndex: lastLog.Index,
-		LastLogTerm:  lastLog.Term,
+	// 4. persist
+	rf.persist()
+	// 5. state = candidate
+	rf.state = Candidate
+	kvraft.DPrintf("[%d]: (term %d) 开始选举", rf.me, rf.currentTerm)
+	// 6. send RequestVote RPCs to all other servers
+	args := &RequestVoteArgs{
+		Term:        rf.currentTerm,
+		CandidateId: rf.me,
 	}
-
-	var becomeLeader sync.Once
-	for serverId, _ := range rf.peers {
+	voteCounter := 1
+	voteCh := make(chan struct{})
+	becomeLeader := new(sync.Once)
+	for serverId := range rf.peers {
 		if serverId != rf.me {
-			go rf.candidateRequestVote(serverId, &args, &voteCounter, &becomeLeader)
+			go rf.candidateRequestVote(serverId, args, voteCh, becomeLeader)
 		}
+	}
+	// 7. count votes
+	for range voteCh {
+		voteCounter++
+		rf.mu.Lock()
+		if voteCounter > len(rf.peers)/2 && rf.currentTerm == args.Term && rf.state == Candidate {
+			kvraft.DPrintf("[%d]: (term %d) 获得多数选票，成为 leader", rf.me, rf.currentTerm)
+			becomeLeader.Do(func() {
+				rf.leaderInit()
+				rf.appendEntries(true)
+			})
+		}
+		rf.mu.Unlock()
 	}
 }
