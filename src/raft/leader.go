@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"6.5840/kvraft"
+	"github.com/rs/zerolog/log"
 )
 
 // return currentTerm and whether this server
@@ -29,7 +29,8 @@ func (rf *Raft) setNewTerm(term int) {
 		rf.state = Follower
 		rf.currentTerm = term
 		rf.votedFor = -1
-		kvraft.DPrintf("[%d]: set term %v\n", rf.me, rf.currentTerm)
+		// kvraft.DPrintf("[%d]: set term %v\n", rf.me, rf.currentTerm)
+		log.Debug().Msgf("[%d]: set term %v\n", rf.me, rf.currentTerm)
 		rf.persist()
 	}
 }
@@ -45,7 +46,8 @@ func (rf *Raft) leaderElection() {
 	rf.persist()
 	// 5. state = candidate
 	rf.state = Candidate
-	kvraft.DPrintf("[%d]: (term %d) 开始选举", rf.me, rf.currentTerm)
+	// kvraft.DPrintf("[%d]: (term %d) 开始选举", rf.me, rf.currentTerm)
+	log.Debug().Msgf("[%d]: (term %d) 开始选举", rf.me, rf.currentTerm)
 	// 6. send RequestVote RPCs to all other servers
 	args := &RequestVoteArgs{
 		Term:        rf.currentTerm,
@@ -64,7 +66,8 @@ func (rf *Raft) leaderElection() {
 		voteCounter++
 		rf.mu.Lock()
 		if voteCounter > len(rf.peers)/2 && rf.currentTerm == args.Term && rf.state == Candidate {
-			kvraft.DPrintf("[%d]: (term %d) 获得多数选票，成为 leader", rf.me, rf.currentTerm)
+			// kvraft.DPrintf("[%d]: (term %d) 获得多数选票，成为 leader", rf.me, rf.currentTerm)
+			log.Debug().Msgf("[%d]: (term %d) 获得多数选票，成为 leader", rf.me, rf.currentTerm)
 			becomeLeader.Do(func() {
 				rf.leaderInit()
 				rf.appendEntries(true)
