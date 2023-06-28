@@ -175,36 +175,6 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 
 }
 
-// example RequestVote RPC handler.
-func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
-	// Your code here (2A, 2B).
-	rf.mu.Lock()
-	defer rf.mu.Unlock()
-	// 1. if args.Term > rf.currentTerm, set currentTerm = args.Term, convert to follower
-	if args.Term > rf.currentTerm {
-		rf.SetCurrentTerm(args.Term)
-	}
-	// 2. if args.Term < rf.currentTerm, reply false
-	if args.Term < rf.currentTerm {
-		reply.VoteGranted = false
-		reply.Term = rf.currentTerm
-		return
-	}
-	// 3. if votedFor is null or CandidateId, and candidate's log is at least as up-to-date as receiver's log, grant vote
-	if rf.votedFor == -1 || rf.votedFor == args.CandidateId {
-		rf.votedFor = args.CandidateId
-		reply.VoteGranted = true
-		reply.Term = rf.currentTerm
-		rf.persist()
-		// kvraft.DPrintf("Raft %d: vote for %d", rf.me, args.CandidateId)
-		log.Debug().Msgf("Raft %d: vote for %d", rf.me, args.CandidateId)
-		// TODO reset election timer
-	} else {
-		reply.VoteGranted = false
-	}
-	reply.Term = rf.currentTerm
-}
-
 // example code to send a RequestVote RPC to a server.
 // server is the index of the target server in rf.peers[].
 // expects RPC arguments in args.
@@ -288,7 +258,7 @@ func (rf *Raft) ticker() {
 		// Check if a leader election should be started.
 		for next := range ticker.C {
 			// kvraft.DPrintf("check election timeout %v", next)
-			log.Debug().Msgf("check election timeout %v", next)
+			log.Debug().Msgf("check election timeout %s", next.Format(time.DateTime))
 			rf.mu.Lock()
 			if rf.state == Leader {
 				rf.appendEntries(true)

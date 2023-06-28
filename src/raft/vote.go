@@ -61,3 +61,33 @@ func (rf *Raft) candidateRequestVote(serverId int, args *RequestVoteArgs, voteCh
 
 	voteCh <- struct{}{}
 }
+
+// example RequestVote RPC handler.
+func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
+	// Your code here (2A, 2B).
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	// 1. if args.Term > rf.currentTerm, set currentTerm = args.Term, convert to follower
+	if args.Term > rf.currentTerm {
+		rf.SetCurrentTerm(args.Term)
+	}
+	// 2. if args.Term < rf.currentTerm, reply false
+	if args.Term < rf.currentTerm {
+		reply.VoteGranted = false
+		reply.Term = rf.currentTerm
+		return
+	}
+	// 3. if votedFor is null or CandidateId, and candidate's log is at least as up-to-date as receiver's log, grant vote
+	if rf.votedFor == -1 || rf.votedFor == args.CandidateId {
+		rf.votedFor = args.CandidateId
+		reply.VoteGranted = true
+		reply.Term = rf.currentTerm
+		rf.persist()
+		rf.resetElectionTimer()
+		// kvraft.DPrintf("Raft %d: vote for %d", rf.me, args.CandidateId)
+		log.Debug().Msgf("Raft %d: vote for %d", rf.me, args.CandidateId)
+	} else {
+		reply.VoteGranted = false
+	}
+	reply.Term = rf.currentTerm
+}
