@@ -10,15 +10,16 @@ package main
 // Please do not change this file.
 //
 
-import "6.5840/mr"
+import (
+	"6.5840/mr"
+	"github.com/rs/zerolog/log"
+)
 import "plugin"
 import "os"
-import "fmt"
-import "log"
 
 func main() {
 	if len(os.Args) != 2 {
-		fmt.Fprintf(os.Stderr, "Usage: mrworker xxx.so\n")
+		log.Error().Msg("Usage: mrworker xxx.so")
 		os.Exit(1)
 	}
 
@@ -32,16 +33,16 @@ func main() {
 func loadPlugin(filename string) (func(string, string) []mr.KeyValue, func(string, []string) string) {
 	p, err := plugin.Open(filename)
 	if err != nil {
-		log.Fatalf("cannot load plugin %v", filename)
+		log.Err(err).Msg("cannot load plugin")
 	}
 	xmapf, err := p.Lookup("Map")
 	if err != nil {
-		log.Fatalf("cannot find Map in %v", filename)
+		log.Err(err).Msg("cannot find Map function in plugin")
 	}
 	mapf := xmapf.(func(string, string) []mr.KeyValue)
 	xreducef, err := p.Lookup("Reduce")
 	if err != nil {
-		log.Fatalf("cannot find Reduce in %v", filename)
+		log.Err(err).Msg("cannot find Reduce function in plugin")
 	}
 	reducef := xreducef.(func(string, []string) string)
 

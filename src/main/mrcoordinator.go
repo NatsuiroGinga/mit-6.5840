@@ -9,14 +9,24 @@ package main
 // Please do not change this file.
 //
 
-import "6.5840/mr"
+import (
+	"errors"
+
+	"6.5840/mr"
+	"github.com/rs/zerolog/log"
+	"lib/logger"
+)
 import "time"
 import "os"
-import "fmt"
+
+func init() {
+	logger.Init()
+}
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "Usage: mrcoordinator inputfiles...\n")
+		// fmt.Fprintf(os.Stderr, "Usage: mrcoordinator inputfiles...\n")
+		log.Err(errors.New("Usage: mrcoordinator inputfiles...")).Send()
 		os.Exit(1)
 	}
 

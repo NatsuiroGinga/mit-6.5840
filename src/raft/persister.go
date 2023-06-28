@@ -18,7 +18,7 @@ type Persister struct {
 }
 
 func MakePersister() *Persister {
-	return &Persister{}
+	return new(Persister)
 }
 
 func clone(orig []byte) []byte {

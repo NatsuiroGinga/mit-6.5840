@@ -16,7 +16,9 @@ import "unicode"
 import "unicode/utf8"
 
 var mu sync.Mutex
-var errorCount int // for TestCapital
+var errorCount int // for TestCa
+
+// pital
 var checked map[reflect.Type]bool
 
 type LabEncoder struct {
@@ -112,13 +114,11 @@ func checkType(t reflect.Type) {
 	}
 }
 
-//
 // warn if the value contains non-default values,
 // as it would if one sent an RPC but the reply
 // struct was already modified. if the RPC reply
 // contains default values, GOB won't overwrite
 // the non-default value.
-//
 func checkDefault(value interface{}) {
 	if value == nil {
 		return

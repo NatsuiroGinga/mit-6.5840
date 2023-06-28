@@ -6,11 +6,15 @@ package main
 // go run mrsequential.go wc.so pg*.txt
 //
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+
+	"github.com/rs/zerolog/log"
+)
 import "6.5840/mr"
 import "plugin"
 import "os"
-import "log"
 import "io/ioutil"
 import "sort"
 
@@ -24,7 +28,8 @@ func (a ByKey) Less(i, j int) bool { return a[i].Key < a[j].Key }
 
 func main() {
 	if len(os.Args) < 3 {
-		fmt.Fprintf(os.Stderr, "Usage: mrsequential xxx.so inputfiles...\n")
+		log.Err(errors.New("Usage: mrsequential xxx.so inputfiles...")).Send()
+		// fmt.Fprintf(os.Stderr, "Usage: mrsequential xxx.so inputfiles...\n")
 		os.Exit(1)
 	}
 
@@ -39,11 +44,13 @@ func main() {
 	for _, filename := range os.Args[2:] {
 		file, err := os.Open(filename)
 		if err != nil {
-			log.Fatalf("cannot open %v", filename)
+			log.Err(err).Msgf("cannot open %v", filename)
+			// log.Fatalf("cannot open %v", filename)
 		}
 		content, err := ioutil.ReadAll(file)
 		if err != nil {
-			log.Fatalf("cannot read %v", filename)
+			log.Err(err).Msgf("cannot read %v", filename)
+			// log.Fatalf("cannot read %v", filename)
 		}
 		file.Close()
 		kva := mapf(filename, string(content))
@@ -91,16 +98,19 @@ func main() {
 func loadPlugin(filename string) (func(string, string) []mr.KeyValue, func(string, []string) string) {
 	p, err := plugin.Open(filename)
 	if err != nil {
-		log.Fatalf("cannot load plugin %v", filename)
+		log.Err(err).Msgf("cannot load plugin %v", filename)
+		// log.Fatalf("cannot load plugin %v", filename)
 	}
 	xmapf, err := p.Lookup("Map")
 	if err != nil {
-		log.Fatalf("cannot find Map in %v", filename)
+		log.Err(err).Msgf("cannot find Map in %v", filename)
+		// log.Fatalf("cannot find Map in %v", filename)
 	}
 	mapf := xmapf.(func(string, string) []mr.KeyValue)
 	xreducef, err := p.Lookup("Reduce")
 	if err != nil {
-		log.Fatalf("cannot find Reduce in %v", filename)
+		log.Err(err).Msgf("cannot find Reduce in %v", filename)
+		// log.Fatalf("cannot find Reduce in %v", filename)
 	}
 	reducef := xreducef.(func(string, []string) string)
 

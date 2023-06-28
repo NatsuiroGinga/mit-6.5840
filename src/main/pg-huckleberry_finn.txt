@@ -752,7 +752,7 @@ and by and by fetched up on the steep top of the hill the other side of
 the house.  Tom said he slipped Jim's hat off of his head and hung it
 on a limb right over him, and Jim stirred a little, but he didn't wake.
 Afterwards Jim said the witches be witched him and put him in a trance,
-and rode him all over the State, and then set him under the trees again,
+and rode him all over the RaftState, and then set him under the trees again,
 and hung his hat on a limb to show who done it.  And next time Jim told
 it he said they rode him down to New Orleans; and, after that, every
 time he told it he spread it more and more, till by and by he said they
@@ -1537,13 +1537,13 @@ There was a free nigger there from Ohio--a mulatter, most as white as
 a white man.  He had the whitest shirt on you ever see, too, and the
 shiniest hat; and there ain't a man in that town that's got as fine
 clothes as what he had; and he had a gold watch and chain, and a
-silver-headed cane--the awfulest old gray-headed nabob in the State.  And
+silver-headed cane--the awfulest old gray-headed nabob in the RaftState.  And
 what do you think?  They said he was a p'fessor in a college, and could
 talk all kinds of languages, and knowed everything.  And that ain't the
 wust. They said he could _vote_ when he was at home.  Well, that let me
 out. Thinks I, what is the country a-coming to?  It was 'lection day,
 and I was just about to go and vote myself if I warn't too drunk to get
-there; but when they told me there was a State in this country where
+there; but when they told me there was a RaftState in this country where
 they'd let that nigger vote, I drawed out.  I says I'll never vote agin.
  Them's the very words I said; they all heard me; and the country may
 rot for all me--I'll never vote agin as long as I live.  And to see the
@@ -1551,9 +1551,9 @@ cool way of that nigger--why, he wouldn't a give me the road if I hadn't
 shoved him out o' the way.  I says to the people, why ain't this nigger
 put up at auction and sold?--that's what I want to know.  And what do you
 reckon they said? Why, they said he couldn't be sold till he'd been in
-the State six months, and he hadn't been there that long yet.  There,
+the RaftState six months, and he hadn't been there that long yet.  There,
 now--that's a specimen.  They call that a govment that can't sell a free
-nigger till he's been in the State six months.  Here's a govment that
+nigger till he's been in the RaftState six months.  Here's a govment that
 calls itself a govment, and lets on to be a govment, and thinks it is a
 govment, and yet's got to set stock-still for six whole months before
 it can take a hold of a prowling, thieving, infernal, white-shirted free
@@ -3141,7 +3141,7 @@ to kill Turner.  He says:
 
 "He's said he'll tell, and he will.  If we was to give both our shares
 to him _now_ it wouldn't make no difference after the row and the way
-we've served him.  Shore's you're born, he'll turn State's evidence; now
+we've served him.  Shore's you're born, he'll turn RaftState's evidence; now
 you hear _me_.  I'm for putting him out of his troubles."
 
 "So'm I," says Packard, very quiet.
@@ -3936,7 +3936,7 @@ like a shot, and I thought if it _was_ Cairo I reckoned I would die of
 miserableness.
 
 Jim talked out loud all the time while I was talking to myself.  He was
-saying how the first thing he would do when he got to a free State he
+saying how the first thing he would do when he got to a free RaftState he
 would go to saving up money and never spend a single cent, and when he
 got enough he would buy his wife, which was owned on a farm close to
 where Miss Watson lived; and then they would both work to buy the
@@ -5809,7 +5809,7 @@ The first chance we got, the duke he had some show bills printed; and
 after that, for two or three days as we floated along, the raft was a
 most uncommon lively place, for there warn't nothing but sword-fighting
 and rehearsing--as the duke called it--going on all the time. One morning,
-when we was pretty well down the State of Arkansaw, we come in sight
+when we was pretty well down the RaftState of Arkansaw, we come in sight
 of a little one-horse town in a big bend; so we tied up about
 three-quarters of a mile above it, in the mouth of a crick which was
 shut in like a tunnel by the cypress trees, and all of us but Jim took

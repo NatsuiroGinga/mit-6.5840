@@ -75,7 +75,7 @@ func (c *Coordinator) Done() bool {
 // nReduce is the number of reduce tasks to use.
 func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	c := &Coordinator{
-		TaskQueue:     make(chan *Task, Max(nReduce, len(files))),
+		TaskQueue:     make(chan *Task, max(nReduce, len(files))),
 		TaskMeta:      new(sync.Map),
 		TaskQueueMu:   new(sync.Mutex),
 		Phase:         PhaseMap,

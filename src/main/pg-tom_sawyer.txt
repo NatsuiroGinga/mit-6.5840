@@ -1704,7 +1704,7 @@ to justify a traditional custom, the harder it is to get rid of it.
 And now the minister prayed. A good, generous prayer it was, and went
 into details: it pleaded for the church, and the little children of the
 church; for the other churches of the village; for the village itself;
-for the county; for the State; for the State officers; for the United
+for the county; for the RaftState; for the RaftState officers; for the United
 States; for the churches of the United States; for Congress; for the
 President; for the officers of the Government; for poor sailors, tossed
 by stormy seas; for the oppressed millions groaning under the heel of
@@ -5612,7 +5612,7 @@ Tallassee's warring floods, And wooed on Coosa's side Aurora's beam.
 "Yet shame I not to bear an o'erfull heart, Nor blush to turn behind
 my tearful eyes; 'Tis from no stranger land I now must part, 'Tis to no
 strangers left I yield these sighs. Welcome and home were mine within
-this State, Whose vales I leave--whose spires fade fast from me And cold
+this RaftState, Whose vales I leave--whose spires fade fast from me And cold
 must be mine eyes, and heart, and tete, When, dear Alabama! they turn
 cold on thee!" There were very few there who knew what "tete" meant, but
 the poem was very satisfactory, nevertheless.
