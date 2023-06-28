@@ -56,7 +56,7 @@ func (rf *Raft) leaderElection() {
 	becomeLeader := new(sync.Once)
 	for serverId := range rf.peers {
 		if serverId != rf.me {
-			go rf.candidateRequestVote(serverId, args, voteCh, becomeLeader)
+			go rf.candidateRequestVote(serverId, args, voteCh)
 		}
 	}
 	// 7. count votes
